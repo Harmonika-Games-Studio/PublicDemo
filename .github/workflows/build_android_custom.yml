@@ -40,7 +40,7 @@ jobs:
       - name: Log Custom JSON Input
         run: |
           echo "Custom JSON Input:"
-          echo "${{ inputs.CUSTOM_JSON }}" | jq '.'
+          echo '${{ inputs.CUSTOM_JSON }}' | jq '.'
         continue-on-error: true
 
       - name: Build Unity Project with Custom Parameters
@@ -56,5 +56,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Build-Android-${{ github.run_number }}
-          path: build/Android/*.apk
+          path: Builds/Android/*.apk
           retention-days: 14
