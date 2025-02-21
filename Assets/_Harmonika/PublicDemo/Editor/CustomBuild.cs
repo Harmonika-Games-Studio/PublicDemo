@@ -7,7 +7,7 @@ public class CustomBuild
 {
     public static void BuildWithCustomAssets()
     {
-        string customJson = GetCommandLineArgument("-CUSTOM_JSON");
+        string customJson = GetCommandLineArgument("-customJson");
 
         Debug.Log("=== STARTING CUSTOM BUILD ===");
 
@@ -21,11 +21,11 @@ public class CustomBuild
         // Ensure JSON is not empty
         if (string.IsNullOrEmpty(customJson))
         {
-            Debug.LogError("CUSTOM_JSON argument is empty or missing!");
+            Debug.LogError("customJson argument is empty or missing!");
             return;
         }
 
-        Debug.Log("Received CUSTOM_JSON: " + customJson);
+        Debug.Log("Received customJson: " + customJson);
 
         // Ensure the Resources directory exists
         string resourcesPath = "Assets/Resources/";
@@ -58,7 +58,7 @@ public class CustomBuild
         }
         catch (System.Exception e)
         {
-            Debug.LogError("Error processing CUSTOM_JSON: " + e.Message);
+            Debug.LogError("Error processing customJson: " + e.Message);
         }
 
         AssetDatabase.Refresh();
@@ -86,7 +86,12 @@ public class CustomBuild
         string[] args = System.Environment.GetCommandLineArgs();
         for (int i = 0; i < args.Length; i++)
         {
-            if (args[i] == name && i + 1 < args.Length)
+            if (args[i].StartsWith(name + "="))
+            {
+                string value = args[i].Substring(args[i].IndexOf('=') + 1);
+                return value.Trim('"').Trim();
+            }
+            else if (args[i] == name && i + 1 < args.Length)
             {
                 return args[i + 1].Trim();
             }
