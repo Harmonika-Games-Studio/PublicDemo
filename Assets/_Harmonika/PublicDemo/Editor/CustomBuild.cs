@@ -8,60 +8,39 @@ public class CustomBuild
 {
     public static void BuildWithCustomAssets()
     {
-        string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-        string logPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), $"build_log-{timestamp}.log");
+        string customJson = GetCommandLineArgument("-CUSTOM_JSON");
 
-        try
+        if (!string.IsNullOrEmpty(customJson))
         {
-            using (StreamWriter logFile = new StreamWriter(logPath, false))
+            File.WriteAllText("Assets/Resources/gameConfig.json", customJson);
+
+            // Download image if URL is provided
+            GameConfig config = JsonUtility.FromJson<GameConfig>(customJson);
+            if (!string.IsNullOrEmpty(config.customImageUrl))
             {
-                string customJson = GetCommandLineArgument("-CUSTOM_JSON");
-
-                if (!string.IsNullOrEmpty(customJson))
+                try
                 {
-                    File.WriteAllText("Assets/Resources/gameConfig.json", customJson);
-                    logFile.WriteLine("JSON file saved at Assets/Resources/gameConfig.json");
-
-                    // Download image if URL is provided
-                    GameConfig config = JsonUtility.FromJson<GameConfig>(customJson);
-                    if (!string.IsNullOrEmpty(config.customImageUrl))
+                    using (WebClient client = new WebClient())
                     {
-                        try
-                        {
-                            using (WebClient client = new WebClient())
-                            {
-                                client.DownloadFile(config.customImageUrl, "Assets/Resources/customImage.bytes");
-                                logFile.WriteLine("Custom image saved at Assets/Resources/customImage.bytes");
-                            }
-                        }
-                        catch (System.Exception e)
-                        {
-                            logFile.WriteLine($"Error downloading image: {e.Message}");
-                        }
+                        client.DownloadFile(config.customImageUrl, "Assets/Resources/customImage.png");
                     }
                 }
-                else
+                catch (System.Exception)
                 {
-                    logFile.WriteLine("No custom JSON provided");
+                    // Handle image download error
                 }
-
-                AssetDatabase.Refresh();
-
-                // Build process
-                BuildPipeline.BuildPlayer(
-                    new[] { "Assets/_Harmonika/PublicDemo/PublicDemo.unity" },
-                    "Builds/Android/DemoBuild.apk",
-                    BuildTarget.Android,
-                    BuildOptions.None
-                );
-
-                logFile.WriteLine("Build process completed successfully");
             }
         }
-        catch (Exception ex)
-        {
-            File.WriteAllText(logPath, $"Build failed: {ex.Message}");
-        }
+
+        AssetDatabase.Refresh();
+
+        // Build process
+        BuildPipeline.BuildPlayer(
+            new[] { "Assets/_Harmonika/PublicDemo/PublicDemo.unity" },
+            "Builds/Android/DemoBuild.apk",
+            BuildTarget.Android,
+            BuildOptions.None
+        );
     }
 
     private static string GetCommandLineArgument(string name)
