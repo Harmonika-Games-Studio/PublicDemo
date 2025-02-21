@@ -42,10 +42,7 @@ jobs:
           targetPlatform: Android
           buildMethod: CustomBuild.BuildWithCustomAssets
           customParameters: >
-            -CUSTOM_COLOR_SPHERE "${{ inputs.customColorSphere }}"
-            -CUSTOM_COLOR_PRISM "${{ inputs.customColorPrism }}"
-            -CUSTOM_COLOR_SQUARE "${{ inputs.customColorSquare }}"
-            -CUSTOM_IMAGE_PATH "${{ inputs.customImagePath }}"
+            -CUSTOM_JSON "${{ inputs.CUSTOM_JSON }}"
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4.6.0
