@@ -46,14 +46,14 @@ public class CustomBuild
 
             if (!string.IsNullOrEmpty(config.customImageUrl))
             {
-                string imagePath = Path.Combine(resourcesPath, "customImage.png");
-
                 using (WebClient client = new WebClient())
                 {
-                    client.DownloadFile(config.customImageUrl, imagePath);
+                    byte[] imageData = client.DownloadData(config.customImageUrl);
+                    string imagePath = Path.Combine(resourcesPath, "customImage.bytes");
+                    File.WriteAllBytes(imagePath, imageData);
+                    Debug.Log("Custom image downloaded successfully at: " + imagePath);
                 }
 
-                Debug.Log("Custom image downloaded successfully at: " + imagePath);
             }
         }
         catch (System.Exception e)
