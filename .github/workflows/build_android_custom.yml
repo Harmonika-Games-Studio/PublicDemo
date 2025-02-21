@@ -3,22 +3,10 @@ name: Build Project for Android (Custom) 📱
 on:
   workflow_dispatch:
     inputs:
-      customColorSphere:
-        description: 'Cor da Esfera (HEX)'
+      CUSTOM_JSON:
+        description: 'Json with game infos'
         required: true
         default: '#FFFFFF'
-      customColorPrism:
-        description: 'Cor do Prisma (HEX)'
-        required: true
-        default: '#FFFFFF'
-      customColorSquare:
-        description: 'Cor do Quadrado (HEX)'
-        required: true
-        default: '#FFFFFF'
-      customImagePath:
-        description: 'Caminho da Imagem (Editor Path ou Absoluto)'
-        required: false
-        default: ''
 
 permissions:
   contents: read

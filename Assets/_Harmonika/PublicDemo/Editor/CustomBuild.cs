@@ -1,58 +1,67 @@
-using UnityEditor;
+ï»¿using UnityEditor;
 using UnityEngine;
 using System.IO;
+using System.Net;
+using System;
 
 public class CustomBuild
 {
     public static void BuildWithCustomAssets()
     {
-        string customColorSphereHex = GetCommandLineArgument("-CUSTOM_COLOR_SPHERE");
-        string customColorPrismHex = GetCommandLineArgument("-CUSTOM_COLOR_PRISM");
-        string customColorSquareHex = GetCommandLineArgument("-CUSTOM_COLOR_SQUARE");
-        string customImagePath = GetCommandLineArgument("-CUSTOM_IMAGE_PATH");
+        string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+        string logPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), $"build_log-{timestamp}.log");
 
-        if (!string.IsNullOrEmpty(customColorSphereHex))
-            PlayerPrefs.SetString("customColorSphere", customColorSphereHex);
-        else
-            PlayerPrefs.SetString("customColorSphere", "#FFFFFF");
-
-        if (!string.IsNullOrEmpty(customColorPrismHex))
-            PlayerPrefs.SetString("customColorPrism", customColorPrismHex);
-        else
-            PlayerPrefs.SetString("customColorPrism", "#FFFFFF");
-
-        if (!string.IsNullOrEmpty(customColorSquareHex))
-            PlayerPrefs.SetString("customColorSquare", customColorSquareHex);
-        else
-            PlayerPrefs.SetString("customColorSquare", "#FFFFFF");
-
-        PlayerPrefs.Save();
-
-        // Carregar e salvar a imagem nos Resources para runtime
-        if (!string.IsNullOrEmpty(customImagePath) && File.Exists(customImagePath))
+        try
         {
-            byte[] imageBytes = File.ReadAllBytes(customImagePath);
-            Texture2D texture = new Texture2D(2, 2);
-            texture.LoadImage(imageBytes);
+            using (StreamWriter logFile = new StreamWriter(logPath, false))
+            {
+                string customJson = GetCommandLineArgument("-CUSTOM_JSON");
 
-            string outputPath = "Assets/Resources/CustomImage.png";
-            File.WriteAllBytes(outputPath, texture.EncodeToPNG());
+                if (!string.IsNullOrEmpty(customJson))
+                {
+                    File.WriteAllText("Assets/Resources/gameConfig.json", customJson);
+                    logFile.WriteLine("JSON file saved at Assets/Resources/gameConfig.json");
 
-            AssetDatabase.ImportAsset(outputPath);
-            Debug.Log($"Imagem personalizada salva em: {outputPath}");
+                    // Download image if URL is provided
+                    GameConfig config = JsonUtility.FromJson<GameConfig>(customJson);
+                    if (!string.IsNullOrEmpty(config.customImageUrl))
+                    {
+                        try
+                        {
+                            using (WebClient client = new WebClient())
+                            {
+                                client.DownloadFile(config.customImageUrl, "Assets/Resources/customImage.bytes");
+                                logFile.WriteLine("Custom image saved at Assets/Resources/customImage.bytes");
+                            }
+                        }
+                        catch (System.Exception e)
+                        {
+                            logFile.WriteLine($"Error downloading image: {e.Message}");
+                        }
+                    }
+                }
+                else
+                {
+                    logFile.WriteLine("No custom JSON provided");
+                }
+
+                AssetDatabase.Refresh();
+
+                // Build process
+                BuildPipeline.BuildPlayer(
+                    new[] { "Assets/_Harmonika/PublicDemo/PublicDemo.unity" },
+                    "Builds/Android/DemoBuild.apk",
+                    BuildTarget.Android,
+                    BuildOptions.None
+                );
+
+                logFile.WriteLine("Build process completed successfully");
+            }
         }
-        else
+        catch (Exception ex)
         {
-            Debug.LogWarning($"Imagem personalizada não encontrada no caminho: {customImagePath}");
+            File.WriteAllText(logPath, $"Build failed: {ex.Message}");
         }
-
-        // Agora faz a build normalmente
-        BuildPipeline.BuildPlayer(
-            new[] { "Assets/_Harmonika/PublicDemo/PublicDemo.unity" },
-            "Builds/Android/DemoBuild.apk",
-            BuildTarget.Android,
-            BuildOptions.None
-        );
     }
 
     private static string GetCommandLineArgument(string name)
@@ -66,5 +75,14 @@ public class CustomBuild
             }
         }
         return null;
+    }
+
+    [System.Serializable]
+    private class GameConfig
+    {
+        public string colorSphere;
+        public string colorPrism;
+        public string colorSquare;
+        public string customImageUrl;
     }
 }
