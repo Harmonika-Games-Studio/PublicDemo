@@ -6,7 +6,8 @@ on:
       CUSTOM_JSON:
         description: 'Json with game infos'
         required: true
-        default: '#FFFFFF'
+        type: string
+        default: '{}'
 
 permissions:
   contents: read
@@ -36,16 +37,24 @@ jobs:
             Library-build-
             Library-
 
+      - name: Log Custom JSON Input
+        run: |
+          echo "Custom JSON Input:"
+          echo "${{ inputs.CUSTOM_JSON }}" | jq '.'
+        continue-on-error: true
+
       - name: Build Unity Project with Custom Parameters
         uses: game-ci/unity-builder@v4.3.0
+        env:
+          CUSTOM_JSON: ${{ inputs.CUSTOM_JSON }}
         with:
           targetPlatform: Android
           buildMethod: CustomBuild.BuildWithCustomAssets
-          customParameters: >
-            -CUSTOM_JSON "${{ inputs.CUSTOM_JSON }}"
+          customParameters: -customJson="$CUSTOM_JSON"
 
       - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v4.6.0
+        uses: actions/upload-artifact@v4
         with:
-          name: Build - Android
-          path: Builds/Android/DemoBuild.apk
+          name: Build-Android-${{ github.run_number }}
+          path: build/Android/*.apk
+          retention-days: 14
