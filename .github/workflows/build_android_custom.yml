@@ -37,6 +37,16 @@ jobs:
             Library-build-
             Library-
 
+      - name: Build Unity Project with Custom Parameters
+        uses: game-ci/unity-builder@v4.3.0
+        env:
+          CUSTOM_JSON: ${{ inputs.CUSTOM_JSON }}
+        with:
+          targetPlatform: Android
+          buildMethod: CustomBuild.BuildWithCustomAssets
+          customParameters: -customJson='${{ inputs.CUSTOM_JSON }}'
+
+      
       - name: Log Custom JSON Input
         run: |
           echo "Custom JSON Input:"
@@ -45,15 +55,6 @@ jobs:
           ls
           cd ../..
         continue-on-error: true
-
-      - name: Build Unity Project with Custom Parameters
-        uses: game-ci/unity-builder@v4.3.0
-        env:
-          CUSTOM_JSON: ${{ inputs.CUSTOM_JSON }}
-        with:
-          targetPlatform: Android
-          buildMethod: CustomBuild.BuildWithCustomAssets
-          customParameters: -customJson="$CUSTOM_JSON"
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
