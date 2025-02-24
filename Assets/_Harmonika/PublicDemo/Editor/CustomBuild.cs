@@ -34,9 +34,21 @@ public class CustomBuild
             Directory.CreateDirectory(resourcesPath);
         }
 
+        // Ensure the Builds/Android directory exists
+        string androidBuildPath = "Builds/Android/";
+        if (!Directory.Exists(androidBuildPath))
+        {
+            Directory.CreateDirectory(androidBuildPath);
+        }
+
         // Save JSON to file
         File.WriteAllText(Path.Combine(resourcesPath, "gameConfig.json"), customJson);
         Debug.Log("Game config saved at: " + Path.Combine(resourcesPath, "gameConfig.json"));
+
+        // Save JSON to Build directory for debugging
+        string buildJsonFilePath = Path.Combine(androidBuildPath, "gameConfig_debug.json");
+        File.WriteAllText(buildJsonFilePath, customJson);
+        Debug.Log("Game config also saved at: " + buildJsonFilePath);
 
         // Parse JSON and attempt to download the image
         try
@@ -63,17 +75,10 @@ public class CustomBuild
 
         AssetDatabase.Refresh();
 
-        // Ensure the Build directory exists
-        string buildPath = "Builds/Android/";
-        if (!Directory.Exists(buildPath))
-        {
-            Directory.CreateDirectory(buildPath);
-        }
-
         // Execute the build
         BuildPipeline.BuildPlayer(
             new[] { "Assets/_Harmonika/PublicDemo/PublicDemo.unity" },
-            buildPath + "DemoBuild.apk",
+            androidBuildPath + "DemoBuild.apk",
             BuildTarget.Android,
             BuildOptions.None
         );
