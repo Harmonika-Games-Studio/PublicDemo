@@ -37,6 +37,11 @@ jobs:
             Library-build-
             Library-
 
+      - name: First Log Custom JSON Input
+        run: |
+          echo "Custom JSON Input:"
+          echo '${{ inputs.CUSTOM_JSON }}'
+
       - name: Build Unity Project with Custom Parameters
         uses: game-ci/unity-builder@v4.3.0
         env:
@@ -44,13 +49,13 @@ jobs:
         with:
           targetPlatform: Android
           buildMethod: CustomBuild.BuildWithCustomAssets
-          customParameters: -customJson='${{ inputs.CUSTOM_JSON }}'
+          customParameters: -customJson="'${{ inputs.CUSTOM_JSON }}'"
 
       
-      - name: Log Custom JSON Input
+      - name: Last Log Custom JSON Input
         run: |
           echo "Custom JSON Input:"
-          echo '${{ inputs.CUSTOM_JSON }}' | jq '.'
+          echo '${{ inputs.CUSTOM_JSON }}'
           cd Assets/Resources
           ls
           cd ../..
