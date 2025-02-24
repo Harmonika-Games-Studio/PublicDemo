@@ -2,30 +2,45 @@
 using UnityEngine;
 using System.IO;
 using System.Net;
+using System.Net.Http;
+using System;
 
 public class CustomBuild
 {
     public static void BuildWithCustomAssets()
     {
-        string customJson = GetCommandLineArgument("-customJson");
+        string authenticationUser = GetCommandLineArgument("-authenticationUser");
+        string authenticationPassword = GetCommandLineArgument("-authenticationPassword");
+        string id = GetCommandLineArgument("-id");
+
+        string configJson = "";
 
         Debug.Log("=== STARTING CUSTOM BUILD ===");
 
-        // Debug all received arguments
-        string[] args = System.Environment.GetCommandLineArgs();
-        foreach (string arg in args)
+        // Downloading JSON
+        try
         {
-            Debug.Log("Received argument: " + arg);
+            using (var client = new HttpClient())
+            {
+                string tokenBase64 = Base64Encode($"{authenticationUser}:{authenticationPassword}");
+                client.DefaultRequestHeaders.Add("Authorization", $"Basic {tokenBase64}");
+
+                // Sincronizando requisição JSON
+                configJson = client.GetStringAsync($"https://giftplay.com.br/builds/getGameConfig/{id}").Result;
+                Debug.Log("Received json: " + configJson);
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError("Error processing json: " + e.Message);
         }
 
         // Ensure JSON is not empty
-        if (string.IsNullOrEmpty(customJson))
+        if (string.IsNullOrEmpty(configJson))
         {
-            Debug.LogError("customJson argument is empty or missing!");
+            Debug.LogError("json argument is empty or missing!");
             return;
         }
-
-        Debug.Log("Received customJson: " + customJson);
 
         // Ensure the Resources directory exists
         string resourcesPath = "Assets/Resources/";
@@ -42,18 +57,18 @@ public class CustomBuild
         }
 
         // Save JSON to file
-        File.WriteAllText(Path.Combine(resourcesPath, "gameConfig.json"), customJson);
+        File.WriteAllText(Path.Combine(resourcesPath, "gameConfig.json"), configJson);
         Debug.Log("Game config saved at: " + Path.Combine(resourcesPath, "gameConfig.json"));
 
         // Save JSON to Build directory for debugging
         string buildJsonFilePath = Path.Combine(androidBuildPath, "gameConfig_debug.json");
-        File.WriteAllText(buildJsonFilePath, customJson);
+        File.WriteAllText(buildJsonFilePath, configJson);
         Debug.Log("Game config also saved at: " + buildJsonFilePath);
 
         // Parse JSON and attempt to download the image
         try
         {
-            GameConfig config = JsonUtility.FromJson<GameConfig>(customJson);
+            GameConfig config = JsonUtility.FromJson<GameConfig>(configJson);
             Debug.Log("JSON parsed successfully!");
 
             if (!string.IsNullOrEmpty(config.customImageUrl))
@@ -70,7 +85,7 @@ public class CustomBuild
         }
         catch (System.Exception e)
         {
-            Debug.LogError("Error processing customJson: " + e.Message);
+            Debug.LogError("Error processing json: " + e.Message);
         }
 
         AssetDatabase.Refresh();
@@ -102,6 +117,12 @@ public class CustomBuild
             }
         }
         return null;
+    }
+
+    public static string Base64Encode(string plainText)
+    {
+        var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(plainText);
+        return System.Convert.ToBase64String(plainTextBytes);
     }
 
     [System.Serializable]
