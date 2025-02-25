@@ -51,8 +51,6 @@ jobs:
 
       - name: Build Unity Project with Custom Parameters
         uses: game-ci/unity-builder@v4.3.0
-        env:
-          CUSTOM_JSON: ${{ inputs.CUSTOM_JSON }}
         with:
           targetPlatform: Android
           buildMethod: CustomBuild.BuildWithCustomAssets
