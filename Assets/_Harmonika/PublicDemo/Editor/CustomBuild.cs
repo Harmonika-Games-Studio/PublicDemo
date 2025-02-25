@@ -85,7 +85,7 @@ public class CustomBuild
         }
         catch (System.Exception e)
         {
-            Debug.LogError("Error processing json: " + e.Message);
+            Debug.LogError("Error downloading image: " + e.Message);
         }
 
         AssetDatabase.Refresh();
