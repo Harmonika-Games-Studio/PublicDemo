@@ -75,6 +75,8 @@ public class CustomBuild
             {
                 using (WebClient client = new WebClient())
                 {
+                    client.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) UnityWebClient/1.0");
+
                     byte[] imageData = client.DownloadData(config.customImageUrl);
                     string imagePath = Path.Combine(resourcesPath, "customImage.bytes");
                     File.WriteAllBytes(imagePath, imageData);
